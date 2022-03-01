@@ -4,7 +4,9 @@ include ../Makefile
 
 setup:
 	@rm -rf $(STORAGE)
+
 	mkdir $(STORAGE)
+
 	IP="`ip addr show ens33 | grep -o -e 'inet [^/]*' | awk '{ print $$2 }'`" \
 	&& \
 	$(ARTEMIS_BASE)/bin/artemis create \
@@ -17,10 +19,17 @@ setup:
 	  --clustered \
 	  --failover-on-shutdown \
 	  --replicated \
-	  --http-host $${IP} \
+	  --http-host 0.0.0.0 \
 	  --host $${IP} \
 	  --queues demo:anycast \
 	  $(STORAGE)/instances/node1
+
+	# Fix CORS setting
+	sed \
+	  -i \
+	  -e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
+	  $(STORAGE)/instances/node1/etc/jolokia-access.xml
+
 	IP="`ip addr show ens33 | grep -o -e 'inet [^/]*' | awk '{ print $$2 }'`" \
 	&& \
 	$(ARTEMIS_BASE)/bin/artemis create \
@@ -33,11 +42,18 @@ setup:
 	  --clustered \
 	  --failover-on-shutdown \
 	  --replicated \
-	  --http-host $${IP} \
+	  --http-host 0.0.0.0 \
 	  --host $${IP} \
 	  --slave \
 	  --port-offset 100 \
 	  $(STORAGE)/instances/node2
+
+	# Fix CORS setting
+	sed \
+	  -i \
+	  -e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
+	  $(STORAGE)/instances/node2/etc/jolokia-access.xml
+
 	patch $(STORAGE)/instances/node1/etc/broker.xml check-for-live-server.patch
 
 node1:
