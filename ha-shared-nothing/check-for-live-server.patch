@@ -1,0 +1,10 @@
+--- ../demo/instances/node1/etc/broker.xml.old	2022-03-01 10:45:31.064122327 +0000
++++ ../demo/instances/node1/etc/broker.xml	2022-03-01 10:53:01.895737621 +0000
+@@ -217,6 +217,7 @@
+       <ha-policy>
+          <replication>
+             <master>
++               <check-for-live-server>true</check-for-live-server>
+                <vote-on-replication-failure>true</vote-on-replication-failure>
+             </master>
+          </replication>
