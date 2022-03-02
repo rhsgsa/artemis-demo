@@ -1,6 +1,6 @@
 # Shared Nothing High-Availability Demo
 
-Before you run the demo, you should ensure that `artemis` is installed by running `make install` in the parent directory.
+Before you run the demo, you should ensure that the `artemis` container image has been created. You can do this by running `make install` in the parent directory.
 
 To run the demo,
 
@@ -8,13 +8,9 @@ To run the demo,
 
 		make setup
 
-1. Start up `node1`
+1. Start the `node1` and `node2` containers
 
-		make node1
-
-1. Open another terminal and start `node2`
-
-		make node2
+		make start
 
 1. Open a new tab and start a consumer on `node1`
 
@@ -35,3 +31,10 @@ To run the demo,
 		make producer2
 
 1. If you stop the consumer on `node2` and start a producer, all messages should go to `node1`
+
+
+## Cleaning Up
+
+When the demo is over, clean everything up with
+
+	make clean

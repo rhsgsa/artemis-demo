@@ -1,15 +1,29 @@
 # AMQ Demo
 
-This demo runs on Linux.
+This demo runs on Artemis in containers.
 
 
 ## Pre-Requisites
 
-1. Java
-1. `sudo`
+1. `docker`
+1. `docker-compose`
 1. `make`
-1. `curl`
+1. `sed`
 1. `patch`
+
+
+## Setup
+
+Create the `artemis` container image by running
+
+	make install
+
+
+## Cleaning Up
+
+Delete the `artemis` container image by running
+
+	make clean-image
 
 
 ## Resources

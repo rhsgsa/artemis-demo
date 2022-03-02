@@ -5,9 +5,12 @@ include $(CWD)/../Makefile
 STORAGE=$(CWD)/demo
 ARTEMIS_BASE=/usr/local/artemis
 
-.PHONY: setup cleanstorage stop start
+USER=admin
+PASSWORD=password
 
-setup: cleanstorage
+.PHONY: setup clean stop start
+
+setup: clean
 	mkdir -p $(STORAGE)
 
 	docker run \
@@ -18,10 +21,10 @@ setup: cleanstorage
 	  $(ARTEMIS_BASE)/bin/artemis create \
 	    --allow-anonymous \
 	    --name node1 \
-	    --user admin \
-	    --password password \
-	    --cluster-user admin \
-	    --cluster-password password \
+	    --user $(USER) \
+	    --password $(PASSWORD) \
+	    --cluster-user $(USER) \
+	    --cluster-password $(PASSWORD) \
 	    --clustered \
 	    --failover-on-shutdown \
 	    --shared-store \
@@ -49,16 +52,15 @@ setup: cleanstorage
 	  $(ARTEMIS_BASE)/bin/artemis create \
 	    --allow-anonymous \
 	    --name node2 \
-	    --user admin \
-	    --password password \
-	    --cluster-user admin \
-	    --cluster-password password \
+	    --user $(USER) \
+	    --password $(PASSWORD) \
+	    --cluster-user $(USER) \
+	    --cluster-password $(PASSWORD) \
 	    --clustered \
 	    --failover-on-shutdown \
 	    --shared-store \
 	    --http-host 0.0.0.0 \
 	    --slave \
-	    --port-offset 100 \
 	    --host node2 \
 	    --data /storage/shared-store \
 	    /storage/instances/node2
@@ -73,7 +75,7 @@ setup: cleanstorage
 	&& \
 	mv jolokia-access.xml.new jolokia-access.xml
 
-cleanstorage: stop
+clean: stop
 	@rm -rf $(STORAGE)
 
 stop:
