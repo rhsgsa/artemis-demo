@@ -36,7 +36,7 @@ To run the demo,
 
 		docker start node1
 
-1. `node1` should become the backup server
+1. `node1` should become the backup server - it doesn't have access to `acceptors` and `addresses`
 
 1. Stop `node2`
 

@@ -14,11 +14,11 @@ To run the demo,
 
 1. Login to the `node1` console at <http://localhost:8161/console> with `admin` / `password`
 
-1. `node1` is the live server
+1. `node1` is the live server - the `Cluster Info` section should state that this node is a `Master`
 
 1. Login to the `node2` console at <http://localhost:8261/console> with `admin` / `password` in an incognito window
 
-1. `node2` is the backup server
+1. `node2` is the backup server - the `Cluster Info` section should state that this node is a `Slave`
 
 1. Send a message on the `demo` queue
 
