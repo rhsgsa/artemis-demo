@@ -25,6 +25,10 @@ Delete the `artemis` container image by running
 
 	make clean-image
 
+Or delete the `artemis` container image and all the temp directories by running
+
+	make clean-all
+
 
 ## Resources
 
