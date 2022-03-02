@@ -1,0 +1,26 @@
+version: "3.5"
+services:
+
+  node1:
+    container_name: node1
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8161:8161
+    volumes:
+      - ./demo:/storage
+    command:
+      - /storage/instances/node1/bin/artemis
+      - run
+
+  node2:
+    container_name: node2
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8261:8261
+    volumes:
+      - ./demo:/storage
+    command:
+      - /storage/instances/node2/bin/artemis
+      - run
+    depends_on:
+      - node1

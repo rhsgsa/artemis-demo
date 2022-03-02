@@ -1,22 +1,18 @@
 VERSION=2.20.0
-ARTEMIS_BASE=/usr/local/artemis
+IMAGE_TAG=ghcr.io/kwkoo/artemis
 
 BASE:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-STORAGE=$(BASE)/demo
-
-.PHONY: usage clean install
+.PHONY: usage clean image
 
 usage:
-	@echo "AMQ Demo"
+	@echo "AMQ Demo - 'make image' to create the artemis container image, 'make clean' to delete the artemis container image"
 
-install: clean
-	sudo rm -rf /usr/local/artemis
-	curl -Lo /tmp/artemis.zip "https://www.apache.org/dyn/closer.cgi?filename=activemq/activemq-artemis/$(VERSION)/apache-artemis-$(VERSION)-bin.zip&action=download"
-	cd /tmp && unzip /tmp/artemis.zip
-	rm -f /tmp/artemis.zip
-	sudo mv /tmp/apache-artemis-* $(ARTEMIS_BASE)
+image:
+	@docker build \
+	  -t $(IMAGE_TAG):$(VERSION) \
+	  --build-arg VERSION=$(VERSION) \
+	  $(BASE)/image
 
 clean:
-	@rm -rf $(STORAGE)
-
+	@docker rmi -f $(IMAGE_TAG):$(VERSION)
