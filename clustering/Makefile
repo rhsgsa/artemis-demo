@@ -10,13 +10,14 @@ PASSWORD=password
 
 .PHONY: setup clean stop start consumer1 consumer2 producer1 producer2
 
-setup:
-	mkdir -p $(STORAGE)
+setup: clean
+	mkdir -p $(STORAGE)/instances/node1
+	mkdir -p $(STORAGE)/instances/node2
 
 	docker run \
 	  --rm \
 	  --name node1 \
-	  -v $(STORAGE):/storage \
+	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  $(ARTEMIS_BASE)/bin/artemis create \
 	    --allow-anonymous \
@@ -45,7 +46,7 @@ setup:
 	docker run \
 	  --rm \
 	  --name node2 \
-	  -v $(STORAGE):/storage \
+	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  $(ARTEMIS_BASE)/bin/artemis create \
 	    --allow-anonymous \
@@ -89,7 +90,7 @@ consumer1:
 
 consumer2:
 	docker exec -it node2 \
-	  /storage/instances/node1/bin/artemis consumer \
+	  /storage/instances/node2/bin/artemis consumer \
 	    --url tcp://node2:61616 \
 	    --verbose \
 	    --destination queue://demo
@@ -103,7 +104,7 @@ producer1:
 
 producer2:
 	docker exec -it node2 \
-	  /storage/instances/node1/bin/artemis producer \
+	  /storage/instances/node2/bin/artemis producer \
 	  --url tcp://node2:61616 \
 	  --message-count 10 \
 	  --destination queue://demo

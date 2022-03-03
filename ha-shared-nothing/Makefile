@@ -11,12 +11,13 @@ PASSWORD=password
 .PHONY: setup clean stop start
 
 setup: clean
-	mkdir -p $(STORAGE)
+	mkdir -p $(STORAGE)/instances/node1
+	mkdir -p $(STORAGE)/instances/node2
 
 	docker run \
 	  --rm \
 	  --name node1 \
-	  -v $(STORAGE):/storage \
+	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  $(ARTEMIS_BASE)/bin/artemis create \
 	    --allow-anonymous \
@@ -46,7 +47,7 @@ setup: clean
 	docker run \
 	  --rm \
 	  --name node2 \
-	  -v $(STORAGE):/storage \
+	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  $(ARTEMIS_BASE)/bin/artemis create \
 	    --allow-anonymous \
