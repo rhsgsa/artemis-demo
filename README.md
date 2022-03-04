@@ -1,6 +1,6 @@
 # Artemis Demo
 
-This demo runs on Artemis in containers.
+This demo runs Artemis in containers.
 
 
 ## Pre-Requisites
