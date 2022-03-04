@@ -1,0 +1,15 @@
+--- broker.xml.old	2022-03-04 15:51:36.000000000 +0800
++++ broker.xml	2022-03-04 15:51:39.000000000 +0800
+@@ -260,5 +260,12 @@
+       </broker-plugins>
+       -->
+ 
++     <!-- mirror content to DR node -->
++     <broker-connections>
++       <amqp-connection uri="tcp://node2:5672" name="node2">
++         <mirror/>
++       </amqp-connection>
++     </broker-connections>
++
+    </core>
+ </configuration>
