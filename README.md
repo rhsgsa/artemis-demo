@@ -1,4 +1,4 @@
-# AMQ Demo
+# Artemis Demo
 
 This demo runs on Artemis in containers.
 
