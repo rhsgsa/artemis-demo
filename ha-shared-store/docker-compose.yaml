@@ -7,7 +7,8 @@ services:
     ports:
       - 8161:8161
     volumes:
-      - ./demo:/storage
+      - ./demo/shared-store:/storage/shared-store
+      - ./demo/instances/node1:/storage/instances/node1
     command:
       - /storage/instances/node1/bin/artemis
       - run
@@ -18,7 +19,8 @@ services:
     ports:
       - 8261:8161
     volumes:
-      - ./demo:/storage
+      - ./demo/shared-store:/storage/shared-store
+      - ./demo/instances/node2:/storage/instances/node2
     command:
       - /storage/instances/node2/bin/artemis
       - run

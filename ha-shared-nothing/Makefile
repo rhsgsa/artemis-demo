@@ -11,8 +11,9 @@ PASSWORD=password
 .PHONY: setup clean stop start
 
 setup: clean
-	mkdir -p $(STORAGE)/instances/node1
-	mkdir -p $(STORAGE)/instances/node2
+	mkdir -p \
+	  $(STORAGE)/instances/node1 \
+	  $(STORAGE)/instances/node2
 
 	docker run \
 	  --rm \
