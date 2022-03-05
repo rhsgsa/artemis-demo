@@ -81,7 +81,7 @@ clean: stop
 	@rm -rf $(STORAGE)
 
 stop:
-	-@docker-compose down
+	-@docker compose down
 
 start:
-	@docker-compose up
+	@docker compose up
