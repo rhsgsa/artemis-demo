@@ -11,43 +11,31 @@ PASSWORD=password
 .PHONY: setup clean stop start debug
 
 setup: clean
-	mkdir -p $(STORAGE)/instances/node1
-	
-	chmod -R ugo+w $(STORAGE)
+	$(DOCKER) volume create artemis-node1
 
+	# Create artemis node instance and fix CORS setting
 	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
-	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
+	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
 	  $(IMAGE_TAG):$(VERSION) \
-	  $(ARTEMIS_BASE)/bin/artemis create \
-	    --allow-anonymous \
-	    --name node1 \
-	    --user $(USER) \
-	    --password $(PASSWORD) \
-	    --http-host 0.0.0.0 \
-	    /storage/instances/node1
-
-	# Fix CORS setting
-	$(DOCKER) run \
-	  --rm \
-	  --name node1 \
-	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
-	  -w /storage/instances/node1/etc \
-	  $(IMAGE_TAG):$(VERSION) \
-	  sed \
-	    -i \
-		-e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
-		jolokia-access.xml
+	  /bin/bash \
+	  -c \
+	  "$(ARTEMIS_BASE)/bin/artemis create \
+	     --allow-anonymous \
+	     --name node1 \
+	     --user $(USER) \
+	     --password $(PASSWORD) \
+	     --http-host 0.0.0.0 \
+	     /storage/instances/node1 \
+	   && \
+	   sed \
+	     -i \
+		 -e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
+		 /storage/instances/node1/etc/jolokia-access.xml"
 
 clean: stop
-	-@$(DOCKER) run \
-	  --rm \
-	  --name node1 \
-	  -v $(STORAGE):/storage \
-	  $(IMAGE_TAG):$(VERSION) \
-	  /bin/bash -c 'rm -rf /storage/*'
-	@rm -rf $(STORAGE)
+	-@$(DOCKER) volume rm artemis-node1 2>/dev/null || exit 0
 
 stop:
 	-@$(DOCKER) stop node1 2>/dev/null || exit 0
@@ -64,7 +52,7 @@ start:
 	  -p 5672:5672 \
 	  -p 1883:1883 \
 	  -p 61613:61613 \
-	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
+	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  /storage/instances/node1/bin/artemis run
 

@@ -21,7 +21,7 @@ RUN \
   && \
   useradd -m -u 1001 -g 0 demo \
   && \
-  mkdir -p /storage/instances/node1 /storage/instance/node2 /storage/shared-store \
+  mkdir -p /storage/instances/node1 /storage/instances/node2 /storage/shared-store \
   && \
   chown -R 1001:0 /storage \
   && \

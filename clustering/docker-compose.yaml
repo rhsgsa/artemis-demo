@@ -7,7 +7,7 @@ services:
     ports:
       - 8161:8161
     volumes:
-      - ./demo/instances/node1:/storage/instances/node1
+      - artemis-node1:/storage/instances/node1
     command:
       - /storage/instances/node1/bin/artemis
       - run
@@ -18,7 +18,15 @@ services:
     ports:
       - 8261:8161
     volumes:
-      - ./demo/instances/node2:/storage/instances/node2
+      - artemis-node2:/storage/instances/node2
     command:
       - /storage/instances/node2/bin/artemis
       - run
+
+volumes:
+  artemis-node1:
+    name: artemis-node1
+    external: true
+  artemis-node2:
+    name: artemis-node2
+    external: true
