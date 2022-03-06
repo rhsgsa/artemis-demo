@@ -12,6 +12,8 @@ PASSWORD=password
 
 setup: clean
 	mkdir -p $(STORAGE)/instances/node1
+	
+	chmod -R ugo+w $(STORAGE)
 
 	docker run \
 	  --rm \
@@ -27,16 +29,24 @@ setup: clean
 	    /storage/instances/node1
 
 	# Fix CORS setting
-	cd $(STORAGE)/instances/node1/etc/ \
-	&& \
-	cat jolokia-access.xml \
-	| \
-	sed -e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
-	> jolokia-access.xml.new \
-	&& \
-	mv jolokia-access.xml.new jolokia-access.xml
+	docker run \
+	  --rm \
+	  --name node1 \
+	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
+	  -w /storage/instances/node1/etc \
+	  $(IMAGE_TAG):$(VERSION) \
+	  sed \
+	    -i \
+		-e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
+		jolokia-access.xml
 
 clean: stop
+	-@docker run \
+	  --rm \
+	  --name node1 \
+	  -v $(STORAGE):/storage \
+	  $(IMAGE_TAG):$(VERSION) \
+	  /bin/bash -c 'rm -rf /storage/*'
 	@rm -rf $(STORAGE)
 
 stop:

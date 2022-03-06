@@ -3,6 +3,12 @@ FROM openjdk:11
 ARG VERSION
 
 RUN \
+  apt update \
+  && \
+  apt install patch \
+  && \
+  apt clean \
+  && \
   curl -Lo /tmp/artemis.zip "https://www.apache.org/dyn/closer.cgi?filename=activemq/activemq-artemis/${VERSION}/apache-artemis-${VERSION}-bin.zip&action=download" \
   && \
   cd /tmp \
@@ -11,4 +17,14 @@ RUN \
   && \
   rm -f /tmp/artemis.zip \
   && \
-  mv /tmp/apache-artemis-* /usr/local/artemis
+  mv /tmp/apache-artemis-* /usr/local/artemis \
+  && \
+  useradd -m -u 1001 -g 0 demo \
+  && \
+  mkdir -p /storage/instances/node1 /storage/instance/node2 /storage/shared-store \
+  && \
+  chown -R 1001:0 /storage \
+  && \
+  echo 'set -o vi' >> /home/demo/.bashrc
+
+USER 1001

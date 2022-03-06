@@ -1,6 +1,6 @@
 # Shared Nothing High-Availability Demo
 
-Before you run the demo, you should ensure that the `artemis` container image has been created. You can do this by running `make install` in the parent directory.
+Before you run the demo, you should ensure that the `artemis` container image has been created. You can do this by running `make image`.
 
 To run the demo,
 

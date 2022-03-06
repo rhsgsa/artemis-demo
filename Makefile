@@ -1,5 +1,6 @@
 VERSION=2.20.0
 IMAGE_TAG=ghcr.io/kwkoo/artemis
+DOCKER_COMPOSE=docker-compose
 
 BASE:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 

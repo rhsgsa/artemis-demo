@@ -8,8 +8,6 @@ This demo runs Artemis in containers.
 1. `docker`
 1. `docker-compose`
 1. `make`
-1. `sed`
-1. `patch`
 
 
 ## Setup

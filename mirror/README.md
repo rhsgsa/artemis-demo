@@ -2,7 +2,7 @@
 
 This demo illustrates how you can setup a broker to [mirror](https://activemq.apache.org/components/artemis/documentation/latest/amqp-broker-connections.html#mirroring) data to a second broker.
 
-Before you run the demo, you should ensure that the `artemis` container image has been created. You can do this by running `make install` in the parent directory.
+Before you run the demo, you should ensure that the `artemis` container image has been created. You can do this by running `make image`.
 
 To run the demo,
 
