@@ -18,7 +18,7 @@ setup: clean
 	
 	chmod -R ugo+w $(STORAGE)
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/shared-store:/storage/shared-store \
@@ -41,7 +41,7 @@ setup: clean
 	    /storage/instances/node1
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -52,7 +52,7 @@ setup: clean
 		-e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
 		jolokia-access.xml
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node2 \
 	  -v $(STORAGE)/shared-store:/storage/shared-store \
@@ -75,7 +75,7 @@ setup: clean
 	    /storage/instances/node2
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node2 \
 	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
@@ -87,7 +87,7 @@ setup: clean
 		jolokia-access.xml
 
 clean: stop
-	-@docker run \
+	-@$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE):/storage \

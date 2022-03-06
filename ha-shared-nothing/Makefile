@@ -17,7 +17,7 @@ setup: clean
 	
 	chmod -R ugo+w $(STORAGE)
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -38,7 +38,7 @@ setup: clean
 	    /storage/instances/node1
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -49,7 +49,7 @@ setup: clean
 		-e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
 		jolokia-access.xml
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node2 \
 	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
@@ -70,7 +70,7 @@ setup: clean
 	    /storage/instances/node2
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node2 \
 	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
@@ -82,7 +82,7 @@ setup: clean
 		jolokia-access.xml
 
 	# Patch node1 broker.xml
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -92,7 +92,7 @@ setup: clean
 	  patch broker.xml /patch/check-for-live-server.patch
 
 clean: stop
-	-@docker run \
+	-@$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE):/storage \

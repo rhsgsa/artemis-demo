@@ -17,7 +17,7 @@ setup: clean
 	
 	chmod -R ugo+w $(STORAGE)
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -32,7 +32,7 @@ setup: clean
 	    /storage/instances/node1
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -43,7 +43,7 @@ setup: clean
 		-e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
 		jolokia-access.xml
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node2 \
 	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
@@ -57,7 +57,7 @@ setup: clean
 	    /storage/instances/node2
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node2 \
 	  -v $(STORAGE)/instances/node2:/storage/instances/node2 \
@@ -69,7 +69,7 @@ setup: clean
 		jolokia-access.xml
 
 	# Patch node1 broker.xml
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -79,7 +79,7 @@ setup: clean
 	  patch broker.xml /patch/mirror.patch
 
 clean: stop
-	-@docker run \
+	-@$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE):/storage \
@@ -94,28 +94,28 @@ start:
 	@$(DOCKER_COMPOSE) up
 
 consumer1:
-	docker exec -it node1 \
+	$(DOCKER) exec -it node1 \
 	  /storage/instances/node1/bin/artemis consumer \
 	    --url tcp://node1:61616 \
 	    --verbose \
 	    --destination queue://demo
 
 consumer2:
-	docker exec -it node2 \
+	$(DOCKER) exec -it node2 \
 	  /storage/instances/node2/bin/artemis consumer \
 	    --url tcp://node2:61616 \
 	    --verbose \
 	    --destination queue://demo
 
 producer1:
-	docker exec -it node1 \
+	$(DOCKER) exec -it node1 \
 	  /storage/instances/node1/bin/artemis producer \
 	    --url tcp://node1:61616 \
 	    --message-count 10 \
 	    --destination queue://demo
 
 producer2:
-	docker exec -it node2 \
+	$(DOCKER) exec -it node2 \
 	  /storage/instances/node2/bin/artemis producer \
 	  --url tcp://node2:61616 \
 	  --message-count 10 \

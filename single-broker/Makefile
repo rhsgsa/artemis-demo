@@ -15,7 +15,7 @@ setup: clean
 	
 	chmod -R ugo+w $(STORAGE)
 
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -29,7 +29,7 @@ setup: clean
 	    /storage/instances/node1
 
 	# Fix CORS setting
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE)/instances/node1:/storage/instances/node1 \
@@ -41,7 +41,7 @@ setup: clean
 		jolokia-access.xml
 
 clean: stop
-	-@docker run \
+	-@$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -v $(STORAGE):/storage \
@@ -50,11 +50,11 @@ clean: stop
 	@rm -rf $(STORAGE)
 
 stop:
-	-@docker stop node1 2>/dev/null || exit 0
-	-@docker rm node1 2>/dev/null || exit 0
+	-@$(DOCKER) stop node1 2>/dev/null || exit 0
+	-@$(DOCKER) rm node1 2>/dev/null || exit 0
 
 start:
-	docker run \
+	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  -it \
@@ -69,4 +69,4 @@ start:
 	  /storage/instances/node1/bin/artemis run
 
 debug:
-	docker exec -it -w /storage/instances/node1 node1 /bin/bash
+	$(DOCKER) exec -it -w /storage/instances/node1 node1 /bin/bash
