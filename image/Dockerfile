@@ -5,7 +5,7 @@ ARG VERSION
 RUN \
   apt update \
   && \
-  apt install patch net-tools iproute2 \
+  apt install -y patch net-tools iproute2 \
   && \
   apt clean \
   && \
