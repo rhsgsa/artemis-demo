@@ -1,0 +1,58 @@
+version: "3.5"
+services:
+
+  node1:
+    container_name: node1
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8161:8161
+      - 5672:5672
+    volumes:
+      - artemis-node1:/storage/instances/node1
+    command:
+      - /storage/instances/node1/bin/artemis
+      - run
+    depends_on:
+      - slow1
+
+  node2:
+    container_name: node2
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8261:8161
+    volumes:
+      - artemis-node2:/storage/instances/node2
+    command:
+      - /storage/instances/node2/bin/artemis
+      - run
+    depends_on:
+      - slow2
+      - node1
+
+  slow1:
+    container_name: slow1
+    image: "ghcr.io/kwkoo/slow-proxy:0.1"
+    environment:
+      - LISTENPORT=61616
+      - TARGETADDRESS=node1
+      - TARGETPORT=61616
+      - CONNDELAY=0
+      - STREAMDELAY=0
+
+  slow2:
+    container_name: slow2
+    image: "ghcr.io/kwkoo/slow-proxy:0.1"
+    environment:
+      - LISTENPORT=61616
+      - TARGETADDRESS=node2
+      - TARGETPORT=61616
+      - CONNDELAY=0
+      - STREAMDELAY=0
+
+volumes:
+  artemis-node1:
+    name: artemis-node1
+    external: true
+  artemis-node2:
+    name: artemis-node2
+    external: true
