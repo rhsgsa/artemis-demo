@@ -45,6 +45,7 @@ start:
 	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
+	  --hostname node1 \
 	  -it \
 	  -p 8161:8161 \
 	  -p 61616:61616 \

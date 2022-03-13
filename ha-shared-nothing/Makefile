@@ -2,7 +2,6 @@ CWD:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 include $(CWD)/../Makefile
 
-STORAGE=$(CWD)/demo
 ARTEMIS_BASE=/usr/local/artemis
 
 USER=admin
