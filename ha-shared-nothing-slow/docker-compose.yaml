@@ -36,7 +36,7 @@ services:
       - LISTENPORT=61616
       - TARGETADDRESS=node1
       - TARGETPORT=61616
-      - CONNDELAY=0
+      - CONNDELAY=5
       - STREAMDELAY=0
 
   slow2:
@@ -46,7 +46,7 @@ services:
       - LISTENPORT=61616
       - TARGETADDRESS=node2
       - TARGETPORT=61616
-      - CONNDELAY=0
+      - CONNDELAY=5
       - STREAMDELAY=0
 
 volumes:

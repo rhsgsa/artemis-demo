@@ -24,8 +24,14 @@ var config = struct {
 	StreamDelay   int    `default:"0" usage:"Delay between bytes in milliseconds"`
 }{}
 
+var listener = struct {
+	wg          sync.WaitGroup
+	mux         sync.RWMutex
+	targetAlive bool
+	ln          net.Listener
+	keepRunning bool
+}{}
 var goRoutinesWaitGroup sync.WaitGroup
-var listenerWaitGroup sync.WaitGroup
 
 // this channel closes after we receive a signal
 var signalShutdown chan struct{}
@@ -46,22 +52,17 @@ func main() {
 
 	signalShutdown = make(chan struct{})
 
-	// start listener here
-	l := fmt.Sprintf("%s:%d", config.ListenAddress, config.ListenPort)
-	ln, err := net.Listen("tcp", l)
-	if err != nil {
-		log.Fatalf("error starting listener: %v", err)
-		return
-	}
-	log.Printf("listening on %s...", l)
-	listenerWaitGroup.Add(1)
-	go startListener(ln)
+	// start listener goroutines here
+	listener.keepRunning = true
+	listener.wg.Add(2)
+	go targetChecker()
+	go startListener()
 
 	<-shutdown
 	log.Print("interrupt signal received")
 	signal.Reset(os.Interrupt, syscall.SIGTERM)
 
-	ln.Close()
+	killListener()
 	close(signalShutdown)
 
 	log.Print("waiting for all go routines to terminate...")
@@ -69,7 +70,7 @@ func main() {
 	log.Print("go routines terminated")
 
 	log.Print("waiting for listener to terminate...")
-	listenerWaitGroup.Wait()
+	listener.wg.Wait()
 	log.Print("listener terminated")
 
 	log.Print("shutdown successful")
@@ -84,20 +85,22 @@ func addGoRoutine() {
 }
 
 func notifyListenerTermination() {
-	listenerWaitGroup.Done()
+	listener.wg.Done()
 }
 
-func startListener(ln net.Listener) {
+func startListener() {
 	defer notifyListenerTermination()
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			log.Printf("error accepting connection: %v", err)
-			return
+	for listenerRunning() {
+		if targetIsAlive() {
+			conn := acceptIncomingConnection()
+			if conn == nil {
+				continue
+			}
+			addGoRoutine()
+			go handleConnection(conn)
+		} else {
+			time.Sleep(time.Second)
 		}
-
-		addGoRoutine()
-		go handleConnection(conn)
 	}
 }
 
@@ -110,6 +113,7 @@ func handleConnection(upstreamConn net.Conn) {
 	downstreamConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", config.TargetAddress, config.TargetPort))
 	if err != nil {
 		log.Printf("error connecting to target: %v", err)
+		upstreamConn.Close()
 		return
 	}
 
@@ -155,7 +159,7 @@ func (conn *proxyConnection) readerLoop(reader io.ReadCloser, ch chan byte) {
 	for {
 		n, err := reader.Read(p)
 		if err != nil {
-			//log.Printf("reader got error: %v", err)
+			log.Printf("reader got error: %v", err)
 			break
 		}
 		if n == 0 {
@@ -199,4 +203,74 @@ func (conn *proxyConnection) writerLoop(incomingConn net.Conn, writer io.Writer,
 	conn.shutdown()
 	notifyTermination()
 	log.Print("writer terminated")
+}
+
+func targetChecker() {
+	defer notifyListenerTermination()
+	for listenerRunning() {
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", config.TargetAddress, config.TargetPort))
+		if err != nil {
+			setTargetState(false)
+		} else {
+			conn.Close()
+			setTargetState(true)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func setTargetState(alive bool) {
+	listener.mux.Lock()
+	if listener.targetAlive && !alive && listener.ln != nil {
+		listener.ln.Close()
+		listener.ln = nil
+	} else if !listener.targetAlive && alive && listener.ln == nil {
+		l := fmt.Sprintf("%s:%d", config.ListenAddress, config.ListenPort)
+		ln, err := net.Listen("tcp", l)
+		if err != nil {
+			log.Fatalf("error starting listener: %v", err)
+			return
+		}
+		listener.ln = ln
+	}
+	listener.targetAlive = alive
+	listener.mux.Unlock()
+}
+
+func targetIsAlive() bool {
+	listener.mux.RLock()
+	defer listener.mux.RUnlock()
+	return listener.targetAlive
+}
+
+func acceptIncomingConnection() net.Conn {
+	listener.mux.RLock()
+	if listener.ln == nil {
+		listener.mux.RUnlock()
+		return nil
+	}
+	ln := listener.ln
+	listener.mux.RUnlock()
+	conn, err := ln.Accept()
+	if err != nil {
+		log.Printf("error accepting conneciton: %v", err)
+		return nil
+	}
+	return conn
+}
+
+func killListener() {
+	listener.mux.Lock()
+	listener.keepRunning = false
+	if listener.ln != nil {
+		listener.ln.Close()
+		listener.ln = nil
+	}
+	listener.mux.Unlock()
+}
+
+func listenerRunning() bool {
+	listener.mux.RLock()
+	defer listener.mux.RUnlock()
+	return listener.keepRunning
 }

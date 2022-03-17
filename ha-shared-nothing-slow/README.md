@@ -1,20 +1,8 @@
 # Shared Nothing High-Availability Demo - Slow Connection
 
----
+This scenario shows what happens when the live and backup nodes have a slow connection between them.
 
-## Todo
-
-* Static connectors
-
-	* [docs](https://activemq.apache.org/components/artemis/documentation/1.0.0/clusters.html#discovery-using-static-connectors)
-
-	* [example](https://github.com/apache/activemq-artemis/blob/913a87c948312aebc244a43f7dd6373b47599ec3/examples/features/clustered/clustered-static-discovery/src/main/resources/activemq/server1/broker.xml#L35)
-
-* Docs to `make sloxy-image`
-
----
-
-Before you run the demo, you should ensure that the `artemis` container image has been created. You can do this by running `make image`.
+Before you run the demo, you should ensure that the `artemis` and `slow-proxy` container images have been created. You can do this by running `make image` and `make slow-image`.
 
 To run the demo,
 
@@ -25,6 +13,11 @@ To run the demo,
 1. Start the `node1` and `node2` containers
 
 		make start
+
+1. The nodes will not be considered highly-available until `node1` has finished syncing its journal and bindings over to `node2`. When the syncing has been completed, you will see the following in the `node2`'s logs
+
+		[org.apache.activemq.artemis.core.server] AMQ221024: Backup server ActiveMQServerImpl::name=node2 is synchronized with live server, nodeID=c3a32dda-a5d9-11ec-9c50-0242ac1e0004.
+		[org.apache.activemq.artemis.core.server] AMQ221031: backup announced
 
 1. Login to the `node1` console at <http://localhost:8161/console> with `admin` / `password`
 

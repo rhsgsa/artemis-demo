@@ -5,7 +5,7 @@ ARG VERSION
 RUN \
   apt update \
   && \
-  apt install patch \
+  apt install -y patch dnsutils netcat inetutils-ping \
   && \
   apt clean \
   && \
