@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -15,14 +17,7 @@ import (
 	"github.com/kwkoo/configparser"
 )
 
-var config = struct {
-	ListenAddress string `default:"" usage:"Listener address"`
-	ListenPort    int    `default:"8080" usage:"Listener port"`
-	TargetAddress string `default:"localhost" usage:"Target address"`
-	TargetPort    int    `default:"8081" usage:"Target port"`
-	ConnDelay     int    `default:"0" usage:"Connection delay in milliseconds"`
-	StreamDelay   int    `default:"0" usage:"Delay between bytes in milliseconds"`
-}{}
+var config proxyConfig
 
 var listener = struct {
 	wg          sync.WaitGroup
@@ -44,13 +39,20 @@ func main() {
 		config.ListenAddress = ""
 	}
 
-	log.Printf("ListenAddress=%s ListenPort=%d TargetAddress=%s TargetPort=%d ConnDelay=%d StreamDelay=%d", config.ListenAddress, config.ListenPort, config.TargetAddress, config.TargetPort, config.ConnDelay, config.StreamDelay)
+	log.Print(&config)
 
 	// Setup signal handling.
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	signalShutdown = make(chan struct{})
+
+	// start web server
+	server := &http.Server{
+		Addr: fmt.Sprintf(":%d", config.Port),
+	}
+	goRoutinesWaitGroup.Add(1)
+	go initHttpServer(server)
 
 	// start listener goroutines here
 	listener.keepRunning = true
@@ -61,6 +63,10 @@ func main() {
 	<-shutdown
 	log.Print("interrupt signal received")
 	signal.Reset(os.Interrupt, syscall.SIGTERM)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	server.Shutdown(ctx)
 
 	killListener()
 	close(signalShutdown)
@@ -106,8 +112,9 @@ func startListener() {
 
 func handleConnection(upstreamConn net.Conn) {
 	defer notifyTermination()
-	if config.ConnDelay > 0 {
-		time.Sleep(time.Duration(config.ConnDelay) * time.Millisecond)
+	connDelay := config.getConnDelay()
+	if connDelay > 0 {
+		time.Sleep(time.Duration(connDelay) * time.Millisecond)
 	}
 
 	downstreamConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", config.TargetAddress, config.TargetPort))
@@ -166,8 +173,9 @@ func (conn *proxyConnection) readerLoop(reader io.ReadCloser, ch chan byte) {
 			continue
 		}
 		ch <- p[0]
-		if config.StreamDelay > 0 {
-			time.Sleep(time.Duration(config.StreamDelay) * time.Millisecond)
+		streamDelay := config.getStreamDelay()
+		if streamDelay > 0 {
+			time.Sleep(time.Duration(streamDelay) * time.Millisecond)
 		}
 	}
 
@@ -253,7 +261,7 @@ func acceptIncomingConnection() net.Conn {
 	listener.mux.RUnlock()
 	conn, err := ln.Accept()
 	if err != nil {
-		log.Printf("error accepting conneciton: %v", err)
+		log.Printf("error accepting connection: %v", err)
 		return nil
 	}
 	return conn

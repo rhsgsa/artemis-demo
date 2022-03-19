@@ -32,21 +32,27 @@ services:
   slow1:
     container_name: slow1
     image: "ghcr.io/kwkoo/slow-proxy:0.1"
+    ports:
+      - 8000:8000
     environment:
+      - PORT=8000
       - LISTENPORT=61616
       - TARGETADDRESS=node1
       - TARGETPORT=61616
-      - CONNDELAY=5
+      - CONNDELAY=0
       - STREAMDELAY=0
 
   slow2:
     container_name: slow2
     image: "ghcr.io/kwkoo/slow-proxy:0.1"
+    ports:
+      - 8001:8000
     environment:
+      - PORT=8000
       - LISTENPORT=61616
       - TARGETADDRESS=node2
       - TARGETPORT=61616
-      - CONNDELAY=5
+      - CONNDELAY=0
       - STREAMDELAY=0
 
 volumes:
