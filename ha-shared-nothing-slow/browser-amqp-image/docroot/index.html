@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browser AMQP Client</title>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+</head>
+<body>
+  <div class="grid-container">
+    <div class="label">Server</div>
+    <div class="input">
+      <input type="text" id="server" value="ws://localhost:5672">
+    </div>
+    <div class="label">Address</div>
+    <div class="input">
+      <input type="text" id="address" value="demo">
+    </div>
+  </div>
+  <div class="buttons">
+    <button onclick="launchConsumer()">Consumer</button>
+    <button onclick="launchProducer()">Producer</button>
+  </div>
+  <script>
+    function launchConsumer() {
+      window.open("consumer.html" + parseInputs());
+    }
+    function launchProducer() {
+      window.open("producer.html" + parseInputs());
+    }
+    function parseInputs() {
+      let server = encodeURIComponent(document.getElementById("server").value);
+      let address = encodeURIComponent(document.getElementById("address").value);
+      return "#server=" + server + "&address=" + address;
+    }
+  </script>
+</body>
+</html>

@@ -8,8 +8,9 @@ USER=admin
 PASSWORD=password
 
 SLOW_IMAGE_TAG=ghcr.io/kwkoo/slow-proxy:0.1
+BROWSER_AMQP_IMAGE_TAG=ghcr.io/kwkoo/browser-amqp:0.1
 
-.PHONY: setup clean stop start slow-image
+.PHONY: setup clean stop start slow-image browser-amqp-image producer consumer slow-node1 fast-node1 clean-images
 
 setup: clean
 	$(DOCKER) volume create artemis-node1
@@ -124,3 +125,23 @@ start:
 
 slow-image:
 	@$(DOCKER) build -t $(SLOW_IMAGE_TAG) $(CWD)/slow-image
+
+browser-amqp-image:
+	@$(DOCKER) build -t $(BROWSER_AMQP_IMAGE_TAG) $(CWD)/browser-amqp-image
+
+producer:
+	open 'http://localhost:8080/producer.html#server=ws%3A%2F%2Flocalhost%3A5672&address=demo'
+
+consumer:
+	open 'http://localhost:8080/consumer.html#server=ws%3A%2F%2Flocalhost%3A5672&address=demo'
+
+slow-node1:
+	curl 'http://localhost:8000/set/buffersize/1'
+	curl 'http://localhost:8000/set/streamdelay/100'
+
+fast-node1:
+	curl 'http://localhost:8000/set/buffersize/16384'
+	curl 'http://localhost:8000/set/streamdelay/0'
+
+clean-images:
+	docker rmi -f $(SLOW_IMAGE_TAG) $(BROWSER_AMQP_IMAGE_TAG)

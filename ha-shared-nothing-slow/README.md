@@ -2,7 +2,39 @@
 
 This scenario shows what happens when the live and backup nodes have a slow connection between them.
 
-Before you run the demo, you should ensure that the `artemis` and `slow-proxy` container images have been created. You can do this by running `make image` and `make slow-image`.
+	                 ┌────────┐
+	                 │        │
+	     ┌───────────► slow2  │
+	     │           │ proxy  │
+	     │           │        │
+	     │           └────┬───┘
+	     │                │
+	     │                │
+	┌────┴───┐       ┌────▼───┐
+	│        │       │        │
+	│ node1  │       │ node2  │
+	│ broker │       │ broker │
+	│        │       │        │
+	└────▲───┘       └────┬───┘
+	     │                │
+	     │                │
+	     │                │
+	┌────┴───┐            │
+	│        │            │
+	│ slow1  ◄────────────┘
+	│ proxy  │
+	│        │
+	└────────┘
+
+`node1` is the live server and `node2` is the backup server.
+
+Before you run the demo, you should ensure that the `artemis`, `slow-proxy`, and `browser-amqp` container images have been created. You can do this by running
+
+	make image
+
+	make slow-image
+
+	make browser-amqp-image
 
 To run the demo,
 
@@ -19,39 +51,25 @@ To run the demo,
 		[org.apache.activemq.artemis.core.server] AMQ221024: Backup server ActiveMQServerImpl::name=node2 is synchronized with live server, nodeID=c3a32dda-a5d9-11ec-9c50-0242ac1e0004.
 		[org.apache.activemq.artemis.core.server] AMQ221031: backup announced
 
-1. Login to the `node1` console at <http://localhost:8161/console> with `admin` / `password`
+1. Open a browser to the browser-based AMQP producer
 
-1. `node1` is the live server
+		make producer
 
-1. Login to the `node2` console at <http://localhost:8261/console> with `admin` / `password` in an incognito window
+1. Send a message by typing something in the text box and pressing enter - you should see an acceptance and settlement message almost immediately
 
-1. `node2` is the backup server
+1. Simulate a slow connection from `node2` to `node1`
 
-1. Send a message on the `demo` queue
+		make slow-node1
 
-1. Stop `node1`
+1. Wait a few seconds for the command above to take effect - look for the following message in the `slow1` container logs
 
-		$(DOCKER) stop node1
+		creating new read buffer of size 1 bytes
 
-1. `node2` should become the live server
+1. Send another message with the browser-based AMQP producer - the acceptance and settlement messages should now appear after about 20 seconds
 
-1. Browse the `demo` queue on `node2` and ensure that the message is still there
+1. Switch `node2`'s connection to `node1` back to normal
 
-1. Send another message on the `demo` queue from the `node2` console
-
-1. Start `node1`
-
-		docker start node1
-
-1. `node1` should become the backup server - it doesn't have access to `acceptors` and `addresses`
-
-1. Stop `node2`
-
-		docker stop node2
-		
-1. `node1` should become the live server
-
-1. Browse the `demo` queue on the `node1` console and check that the queue contains 2 messages
+		make fast-node1
 
 
 ## Cleaning Up

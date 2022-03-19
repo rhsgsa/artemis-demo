@@ -57,6 +57,12 @@ services:
       - CONNDELAY=0
       - STREAMDELAY=0
 
+  browser-amqp:
+    container_name: browser-amqp
+    image: "ghcr.io/kwkoo/browser-amqp:0.1"
+    ports:
+      - 8080:8080
+
 volumes:
   artemis-node1:
     name: artemis-node1

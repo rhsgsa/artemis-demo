@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AMQP Consumer</title>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- https://github.com/amqp/rhea/blob/main/examples/websockets/client.html -->
+  <!-- This example was adapted from a chat example included in the
+  excellent 'JavaScript: The Definitive Guide', by David Flanagan and
+  published by O'Reilly. -->
+  <script src="rhea.js"></script>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+</head>
+
+<body>
+<div id="messages"><h2>Messages</h2></div>
+<script>
+  var parsedurl = parseURL();
+  var ws;
+  var connection;
+
+  var client = require("rhea");
+  client.on("message", function (context) {
+    log(true, context.message.body);
+  });
+
+  if (parsedurl.server.length > 0) {
+    var ws = client.websocket_connect(WebSocket);
+    connection = client.connect({"connection_details":ws(parsedurl.server), "reconnect":true});
+    connection.on("connection_open", function (context) {
+      log(false, "connection open");
+    });
+    connection.on("connection_close", function (context) {
+      log(false, "connection closed");
+    });
+    connection.on("connection_error", function (context) {
+      log(false, "connection error");
+    });
+    connection.on("protocol_error", function (context) {
+      log(false, "protocol error");
+    });
+    connection.on("error", function (context) {
+      log(false, "error");
+    });
+    connection.on("disconnected", function (context) {
+      log(false, "connection disconnected");
+    });
+    connection.on("settled", function (context) {
+      log(false, "connection settled");
+    });
+
+    if (parsedurl.address.length > 0) {
+      let receiver = connection.open_receiver(parsedurl.address);
+      receiver.on("close", function (context) {
+        log(false, "receiver closed");
+      });
+      receiver.on("receiver_open", function (context) {
+        log(false, "receiver opened");
+      });
+      receiver.on("receiver_drained", function (context) {
+        log(false, "receiver drained");
+      });
+      receiver.on("receiver_flow", function (context) {
+        log(false, "receiver flow");
+      });
+      receiver.on("receiver_error", function (context) {
+        log(false, "receiver error");
+      });
+      receiver.on("receiver_close", function (context) {
+        log(false, "receiver closed");
+      });
+      receiver.on("settled", function (context) {
+        log(false, "receiver settled");
+      });
+    }
+  }
+
+  function log(ismessage, message) {
+    let now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1;
+    let date = now.getDate();
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let seconds = now.getSeconds();
+    let milliseconds = now.getMilliseconds();
+
+    year = year + "";
+    month = month + "";
+    date = date + "";
+    hours = hours + "";
+    minutes = minutes + "";
+    seconds = seconds + "";
+    milliseconds = milliseconds + "";
+
+    var node = document.createTextNode("[" + year.padStart(4, "0") + "-" + month.padStart(2, "0") + "-" + date.padStart(2, "0") + " " + hours.padStart(2, "0") + ":" + minutes.padStart(2, "0") + ":" + seconds.padStart(2, "0") + "." + milliseconds.padStart(3, "0") + "] " + message);
+    var div = document.createElement("div");
+    div.classList.add(ismessage?"message":"log");
+    div.appendChild(node);
+    document.getElementById("messages").appendChild(div);
+    div.scrollIntoView();
+  }
+
+  function parseURL() {
+    let url = window.location.href;
+    let hash = url.indexOf('#');
+    if (hash == -1) {
+      alert("did not find hash in URL");
+      return {
+        "server": "",
+        "address": "",
+      };
+    }
+    let params = new URLSearchParams(url.substring(hash + 1));
+    let server = params.get("server");
+    let address = params.get("address");
+    return {
+      "server": server,
+      "address": address
+    };
+  }
+</script>
+</body>
+</html>
