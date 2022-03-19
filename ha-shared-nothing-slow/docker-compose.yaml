@@ -35,6 +35,7 @@ services:
     ports:
       - 8000:8000
     environment:
+      - BUFFERSIZE=16384
       - PORT=8000
       - LISTENPORT=61616
       - TARGETADDRESS=node1
@@ -48,6 +49,7 @@ services:
     ports:
       - 8001:8000
     environment:
+      - BUFFERSIZE=16384
       - PORT=8000
       - LISTENPORT=61616
       - TARGETADDRESS=node2

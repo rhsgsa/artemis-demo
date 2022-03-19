@@ -50,15 +50,25 @@ func httpSetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("error setting stream delay: %v", err), http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintln(w, "ok")
-		return
+	case "conndelay":
+		if err := config.setConnDelay(val); err != nil {
+			http.Error(w, fmt.Sprintf("error setting connection delay: %v", err), http.StatusInternalServerError)
+			return
+		}
+	case "buffersize":
+		if err := config.setBufferSize(val); err != nil {
+			http.Error(w, fmt.Sprintf("error setting write buffer size: %v", err), http.StatusInternalServerError)
+			return
+		}
 	default:
 		http.Error(w, "unrecognized key", http.StatusInternalServerError)
 		return
 	}
+	fmt.Fprintln(w, "ok")
 }
 
 func httpDefaultHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
+	fmt.Fprintf(w, "number of connections=%d\n", registry.size())
 	fmt.Fprintln(w, &config)
 }

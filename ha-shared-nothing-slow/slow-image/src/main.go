@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -32,6 +31,8 @@ var goRoutinesWaitGroup sync.WaitGroup
 var signalShutdown chan struct{}
 
 func main() {
+	initRegistry()
+
 	if err := configparser.Parse(&config); err != nil {
 		log.Fatal(err)
 	}
@@ -125,12 +126,14 @@ func handleConnection(upstreamConn net.Conn) {
 	}
 
 	proxyConn := proxyConnection{
+		connId:         upstreamConn.RemoteAddr().String(),
 		upstreamConn:   upstreamConn,
 		downstreamConn: downstreamConn,
-		fromUpstream:   make(chan byte),
-		fromDownstream: make(chan byte),
+		fromUpstream:   make(chan []byte),
+		fromDownstream: make(chan []byte),
 		stopReaders:    make(chan struct{}),
 	}
+	registry.addConnection(&proxyConn)
 
 	addGoRoutine()
 	go proxyConn.readerLoop(upstreamConn, proxyConn.fromUpstream)
@@ -141,76 +144,6 @@ func handleConnection(upstreamConn net.Conn) {
 	go proxyConn.readerLoop(downstreamConn, proxyConn.fromDownstream)
 	addGoRoutine()
 	go proxyConn.writerLoop(downstreamConn, upstreamConn, proxyConn.fromDownstream)
-}
-
-type proxyConnection struct {
-	upstreamConn   net.Conn
-	downstreamConn net.Conn
-	fromUpstream   chan byte
-	fromDownstream chan byte
-	stopReaders    chan struct{}
-	mux            sync.Mutex
-}
-
-func (conn *proxyConnection) shutdown() {
-	conn.mux.Lock()
-	if conn.stopReaders != nil {
-		close(conn.stopReaders)
-		conn.stopReaders = nil
-	}
-	conn.mux.Unlock()
-}
-
-func (conn *proxyConnection) readerLoop(reader io.ReadCloser, ch chan byte) {
-	p := make([]byte, 1)
-	for {
-		n, err := reader.Read(p)
-		if err != nil {
-			log.Printf("reader got error: %v", err)
-			break
-		}
-		if n == 0 {
-			continue
-		}
-		ch <- p[0]
-		streamDelay := config.getStreamDelay()
-		if streamDelay > 0 {
-			time.Sleep(time.Duration(streamDelay) * time.Millisecond)
-		}
-	}
-
-	reader.Close()
-	close(ch)
-	conn.shutdown()
-	notifyTermination()
-	log.Print("reader terminated")
-}
-
-func (conn *proxyConnection) writerLoop(incomingConn net.Conn, writer io.Writer, ch chan byte) {
-	p := make([]byte, 1)
-	keepRunning := true
-	for keepRunning {
-		select {
-		case b, ok := <-ch:
-			if !ok {
-				keepRunning = false
-				break
-			}
-			p[0] = b
-			if _, err := writer.Write(p); err != nil {
-				//log.Printf("error writing to stream: %v", err)
-				keepRunning = false
-			}
-		case <-conn.stopReaders:
-			keepRunning = false
-		case <-signalShutdown:
-			keepRunning = false
-		}
-	}
-	incomingConn.Close()
-	conn.shutdown()
-	notifyTermination()
-	log.Print("writer terminated")
 }
 
 func targetChecker() {

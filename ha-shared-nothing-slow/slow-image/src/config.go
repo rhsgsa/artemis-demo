@@ -14,11 +14,12 @@ type proxyConfig struct {
 	TargetPort    int    `default:"8081" usage:"Target port"`
 	ConnDelay     int    `default:"0" usage:"Connection delay in milliseconds"`
 	StreamDelay   int    `default:"0" usage:"Delay between bytes in milliseconds"`
+	BufferSize    int    `default:"16384" usage:"Buffer size"`
 	mux           sync.RWMutex
 }
 
 func (p *proxyConfig) String() string {
-	return fmt.Sprintf("Port=%d ListenAddress=%s ListenPort=%d TargetAddress=%s TargetPort=%d ConnDelay=%d StreamDelay=%d", p.Port, p.ListenAddress, p.ListenPort, p.TargetAddress, p.TargetPort, p.ConnDelay, p.StreamDelay)
+	return fmt.Sprintf("Port=%d ListenAddress=%s ListenPort=%d TargetAddress=%s TargetPort=%d ConnDelay=%d StreamDelay=%d BufferSize=%d", p.Port, p.ListenAddress, p.ListenPort, p.TargetAddress, p.TargetPort, p.ConnDelay, p.StreamDelay, p.BufferSize)
 }
 
 func (p *proxyConfig) getStreamDelay() int {
@@ -51,6 +52,24 @@ func (p *proxyConfig) setConnDelay(d int) error {
 	p.mux.Lock()
 	p.ConnDelay = d
 	p.mux.Unlock()
+
+	return nil
+}
+
+func (p *proxyConfig) getBufferSize() int {
+	p.mux.RLock()
+	defer p.mux.RUnlock()
+	return p.BufferSize
+}
+
+func (p *proxyConfig) setBufferSize(s int) error {
+	if s < 1 {
+		return errors.New("buffer size cannot be below 1")
+	}
+	p.mux.Lock()
+	p.BufferSize = s
+	p.mux.Unlock()
+	//registry.closeAllConnections()
 
 	return nil
 }
