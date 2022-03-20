@@ -15,17 +15,19 @@ setup: clean
 	$(DOCKER) volume create artemis-shared
 
 	# Create artemis node1 instance and fix CORS setting
+	# Create artemis node2 instance and fix CORS setting
 	$(DOCKER) run \
 	  --rm \
 	  --name node1 \
 	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
+	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
 	  --mount type=volume,source=artemis-shared,target=/storage/shared-store \
 	  $(IMAGE_TAG):$(VERSION) \
 	  /bin/bash \
 	  -c \
 	  "$(ARTEMIS_BASE)/bin/artemis create \
 	     --allow-anonymous \
-	     --name node1 \
+	     --name setup \
 	     --user $(USER) \
 	     --password $(PASSWORD) \
 	     --cluster-user $(USER) \
@@ -42,18 +44,9 @@ setup: clean
 	   sed \
 	     -i \
 		 -e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
-		 /storage/instances/node1/etc/jolokia-access.xml"
-
-	# Create artemis node2 instance and fix CORS setting
-	$(DOCKER) run \
-	  --rm \
-	  --name node2 \
-	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
-	  --mount type=volume,source=artemis-shared,target=/storage/shared-store \
-	  $(IMAGE_TAG):$(VERSION) \
-	  /bin/bash \
-	  -c \
-	  "$(ARTEMIS_BASE)/bin/artemis create \
+		 /storage/instances/node1/etc/jolokia-access.xml \
+	   && \
+	   $(ARTEMIS_BASE)/bin/artemis create \
 	     --allow-anonymous \
 	     --name node2 \
 	     --user $(USER) \

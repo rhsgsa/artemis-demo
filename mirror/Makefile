@@ -14,10 +14,12 @@ setup: clean
 	$(DOCKER) volume create artemis-node2
 
 	# Create artemis node1 instance and fix CORS setting
+	# Create artemis node2 instance and fix CORS setting
 	$(DOCKER) run \
 	  --rm \
-	  --name node1 \
+	  --name setup \
 	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
+	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  /bin/bash \
 	  -c \
@@ -33,17 +35,9 @@ setup: clean
 	   sed \
 	     -i \
 		 -e 's|<allow-origin>.*|<allow-origin>*://*</allow-origin>|' \
-		 /storage/instances/node1/etc/jolokia-access.xml"
-
-	# Create artemis node2 instance and fix CORS setting
-	$(DOCKER) run \
-	  --rm \
-	  --name node2 \
-	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
-	  $(IMAGE_TAG):$(VERSION) \
-	  /bin/bash \
-	  -c \
-	  "$(ARTEMIS_BASE)/bin/artemis create \
+		 /storage/instances/node1/etc/jolokia-access.xml \
+	   && \
+	   $(ARTEMIS_BASE)/bin/artemis create \
 	     --allow-anonymous \
 	     --name node2 \
 	     --user $(USER) \
@@ -60,15 +54,15 @@ setup: clean
 	$(DOCKER) run \
 	  --rm \
 	  -d \
-	  --name node1 \
+	  --name setup \
 	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  tail -f /dev/null
-	$(DOCKER) cp $(CWD)/mirror.patch node1:/storage/instances/node1/etc/mirror.patch
-	$(DOCKER) stop node1
+	$(DOCKER) cp $(CWD)/mirror.patch setup:/storage/instances/node1/etc/mirror.patch
+	$(DOCKER) stop setup
 	$(DOCKER) run \
 	  --rm \
-	  --name node1 \
+	  --name setup \
 	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
 	  -w /storage/instances/node1/etc \
 	  $(IMAGE_TAG):$(VERSION) \

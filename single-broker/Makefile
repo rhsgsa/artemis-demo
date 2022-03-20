@@ -16,7 +16,7 @@ setup: clean
 	# Create artemis node instance and fix CORS setting
 	$(DOCKER) run \
 	  --rm \
-	  --name node1 \
+	  --name setup \
 	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
 	  $(IMAGE_TAG):$(VERSION) \
 	  /bin/bash \
