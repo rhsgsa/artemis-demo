@@ -1,0 +1,47 @@
+version: "3.5"
+services:
+
+  haproxy:
+    container_name: haproxy
+    image: "haproxy:2.5.5"
+    ports:
+      - 5672:5672
+      - 1936:1936
+    volumes:
+      - ${PWD}/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+  node1:
+    container_name: node1
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 61616:61616
+      - 8161:8161
+    volumes:
+      - ${PWD}/node1/:/home/jboss/broker/
+    command:
+      - /home/jboss/broker/bin/artemis
+      - run
+
+  node2:
+    container_name: node2
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 61626:61616
+      - 8261:8161
+    volumes:
+      - ${PWD}/node2/:/home/jboss/broker/
+    command:
+      - /home/jboss/broker/bin/artemis
+      - run
+
+  node3:
+    container_name: node3
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 61636:61616
+      - 8361:8161
+    volumes:
+      - ${PWD}/node3/:/home/jboss/broker/
+    command:
+      - /home/jboss/broker/bin/artemis
+      - run
