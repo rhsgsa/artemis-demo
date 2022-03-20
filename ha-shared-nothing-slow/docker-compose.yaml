@@ -59,9 +59,11 @@ services:
 
   browser-amqp:
     container_name: browser-amqp
-    image: "ghcr.io/kwkoo/browser-amqp:0.1"
+    image: "bitnami/nginx:1.21.6"
     ports:
       - 8080:8080
+    volumes:
+      - browser-amqp:/app
 
 volumes:
   artemis-node1:
@@ -69,4 +71,7 @@ volumes:
     external: true
   artemis-node2:
     name: artemis-node2
+    external: true
+  browser-amqp:
+    name: browser-amqp
     external: true

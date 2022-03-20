@@ -28,13 +28,11 @@ This scenario shows what happens when the live and backup nodes have a slow conn
 
 `node1` is the live server and `node2` is the backup server.
 
-Before you run the demo, you should ensure that the `artemis`, `slow-proxy`, and `browser-amqp` container images have been created. You can do this by running
+Before you run the demo, you should ensure that the `artemis`, and `slow-proxy` container images have been created. You can do this by running
 
 	make image
 
 	make slow-image
-
-	make browser-amqp-image
 
 To run the demo,
 
