@@ -16,15 +16,19 @@ setup: clean
 	$(DOCKER) volume create artemis-node2
 	$(DOCKER) volume create browser-amqp
 
-
-	# Create artemis node1 instance and fix CORS setting
-	# Create artemis node2 instance and fix CORS setting
 	$(DOCKER) run \
 	  --rm \
+	  -d \
 	  --name setup \
 	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
 	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
+	  --mount type=volume,source=browser-amqp,target=/storage/shared-store/docroot \
 	  $(IMAGE_TAG):$(VERSION) \
+	  tail -f /dev/null
+
+	# Create artemis node1 instance and fix CORS setting
+	# Create artemis node2 instance and fix CORS setting
+	$(DOCKER) exec setup \
 	  /bin/bash \
 	  -c \
 	  "$(ARTEMIS_BASE)/bin/artemis create \
@@ -70,27 +74,12 @@ setup: clean
 	# Patch node1 broker.xml
 	# Patch node2 broker.xml
 	# Setup browser-amqp docroot
-	$(DOCKER) run \
-	  --rm \
-	  -d \
-	  --name setup \
-	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
-	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
-	  --mount type=volume,source=browser-amqp,target=/storage/shared-store/docroot \
-	  $(IMAGE_TAG):$(VERSION) \
-	  tail -f /dev/null
 	$(DOCKER) cp $(CWD)/check-for-live-server.patch setup:/storage/instances/node1/etc/check-for-live-server.patch
 	$(DOCKER) cp $(CWD)/node1-static-connector.patch setup:/storage/instances/node1/etc/node1-static-connector.patch
 	$(DOCKER) cp $(CWD)/node2-static-connector.patch setup:/storage/instances/node2/etc/node2-static-connector.patch
 	$(DOCKER) cp $(CWD)/browser-amqp-image/docroot/ setup:/storage/shared-store/
-	$(DOCKER) stop setup
-	$(DOCKER) run \
-	  --rm \
-	  --name setup \
-	  --mount type=volume,source=artemis-node1,target=/storage/instances/node1 \
-	  --mount type=volume,source=artemis-node2,target=/storage/instances/node2 \
-	  --mount type=volume,source=browser-amqp,target=/storage/shared-store \
-	  $(IMAGE_TAG):$(VERSION) \
+
+	$(DOCKER) exec setup \
 	  /bin/bash \
 	  -c \
 	  'patch /storage/instances/node1/etc/broker.xml /storage/instances/node1/etc/check-for-live-server.patch \
@@ -102,6 +91,8 @@ setup: clean
 	  patch /storage/instances/node2/etc/broker.xml /storage/instances/node2/etc/node2-static-connector.patch \
 	  && \
 	  rm -f /storage/instances/node2/etc/*.patch'
+
+	$(DOCKER) stop setup
 
 clean: stop
 	-@$(DOCKER) volume rm browser-amqp 2>/dev/null || exit 0
