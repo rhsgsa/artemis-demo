@@ -1,0 +1,69 @@
+version: "3.5"
+services:
+
+  node1:
+    container_name: node1
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8161:8161
+    volumes:
+      - artemis-node1:/storage/instances/node1
+    command:
+      - /bin/bash
+      - "-c"
+      - |
+        until nc -w 1 zoo1 2181; do
+          echo "waiting for zookeeper..."
+          sleep 5
+        done
+
+        exec /storage/instances/node1/bin/artemis run
+
+  node2:
+    container_name: node2
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8261:8161
+    volumes:
+      - artemis-node2:/storage/instances/node2
+    command:
+      - /bin/bash
+      - "-c"
+      - |
+        until nc -w 1 zoo2 2181; do
+          echo "waiting for zookeeper..."
+          sleep 5
+        done
+
+        exec /storage/instances/node2/bin/artemis run
+    depends_on:
+      - node1
+
+  zoo1:
+    container_name: zoo1
+    image: "zookeeper:3.8"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+
+  zoo2:
+    container_name: zoo2
+    image: "zookeeper:3.8"
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+
+  zoo3:
+    container_name: zoo3
+    image: "zookeeper:3.8"
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+
+volumes:
+  artemis-node1:
+    name: artemis-node1
+    external: true
+  artemis-node2:
+    name: artemis-node2
+    external: true

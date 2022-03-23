@@ -1,0 +1,19 @@
+--- broker.xml.old	2022-03-24 04:54:57.000000000 +0800
++++ broker.xml	2022-03-24 04:58:57.000000000 +0800
+@@ -216,7 +216,15 @@
+ 
+       <ha-policy>
+          <replication>
+-            <slave/>
++            <backup>
++              <manager>
++                <class-name>org.apache.activemq.artemis.quorum.zookeeper.CuratorDistributedPrimitiveManager</class-name>
++                <properties>
++                  <property key="connect-string" value="zoo1:2181,zoo2:2181,zoo3:2181"/>
++                </properties>
++              </manager>
++              <allow-failback>true</allow-failback>
++            </backup>
+          </replication>
+       </ha-policy>
+ 
