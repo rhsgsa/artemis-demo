@@ -12,9 +12,14 @@ services:
       - /bin/bash
       - "-c"
       - |
-        until nc -w 1 zoo1 2181; do
-          echo "waiting for zookeeper..."
-          sleep 5
+        # wait for all 3 zookeeper nodes to come up before starting artemis
+        #
+        for server in zoo1 zoo2 zoo3; do
+          until nc -w 1 $${server} 2181; do
+            echo "waiting for $${server}..."
+            sleep 5
+          done
+          echo "successfully connected to $${server}"
         done
 
         exec /storage/instances/node1/bin/artemis run
@@ -30,9 +35,14 @@ services:
       - /bin/bash
       - "-c"
       - |
-        until nc -w 1 zoo2 2181; do
-          echo "waiting for zookeeper..."
-          sleep 5
+        # wait for all 3 zookeeper nodes to come up before starting artemis
+        #
+        for server in zoo1 zoo2 zoo3; do
+          until nc -w 1 $${server} 2181; do
+            echo "waiting for $${server}..."
+            sleep 5
+          done
+          echo "successfully connected to $${server}"
         done
 
         exec /storage/instances/node2/bin/artemis run
