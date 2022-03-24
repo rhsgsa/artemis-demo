@@ -24,7 +24,7 @@ To run the demo,
 
 1. Stop `node1`
 
-		$(DOCKER) stop node1
+		docker stop node1
 
 1. `node2` should become the live server
 
