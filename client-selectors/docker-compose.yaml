@@ -1,0 +1,30 @@
+version: "3.5"
+services:
+
+  node1:
+    container_name: node1
+    image: "ghcr.io/kwkoo/artemis:2.20.0"
+    ports:
+      - 8161:8161
+      - 5672:5672
+    volumes:
+      - artemis-node1:/storage/instances/node1
+    command:
+      - /storage/instances/node1/bin/artemis
+      - run
+
+  browser-amqp:
+    container_name: browser-amqp
+    image: "bitnami/nginx:1.21.6"
+    ports:
+      - 8080:8080
+    volumes:
+      - browser-amqp:/app
+
+volumes:
+  artemis-node1:
+    name: artemis-node1
+    external: true
+  browser-amqp:
+    name: browser-amqp
+    external: true

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browser AMQP Client</title>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- https://github.com/amqp/rhea/blob/main/examples/websockets/client.html -->
+  <!-- This example was adapted from a chat example included in the
+  excellent 'JavaScript: The Definitive Guide', by David Flanagan and
+  published by O'Reilly. -->
+<script src="rhea.js"></script>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+</head>
+<body>
+  <div id="frontpage">
+    <div class="grid-container">
+      <div class="label">Server</div>
+      <div class="input">
+        <input type="text" id="server" value="ws://localhost:5672">
+      </div>
+      <div class="label">Address</div>
+      <div class="input">
+        <input type="text" id="address" value="demo">
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="start()">Start</button>
+    </div>
+  </div>
+  <div id="main">
+    <fieldset>
+      <legend>Producer</legend>
+      <label>Header</label>
+      <select id="header">
+        <option value="">None</option>
+        <option value="red">color = 'red'</option>
+        <option value="blue">color = 'blue'</option>
+      </select>
+      <button id="pause" onclick="toggleProducer()">Pause</button>
+    </fieldset>
+    <fieldset>
+      <legend>Consumer 1</legend>
+      <label>Filter</label>
+      <select id="filter1" onchange="changeFilter('1')">
+        <option value="">None</option>
+        <option value="color = 'red'">color = 'red'</option>
+        <option value="color = 'blue'">color = 'blue'</option>
+      </select>
+      <br/><br/>
+      <textarea id="text1" rows="10" cols="120" readonly>Consumer 1 Logs</textarea>
+    </fieldset>
+    <fieldset>
+      <legend>Consumer 2</legend>
+      <label>Filter</label>
+      <select id="filter2" onchange="changeFilter('2')">
+        <option value="">None</option>
+        <option value="color = 'red'">color = 'red'</option>
+        <option value="color = 'blue'">color = 'blue'</option>
+      </select>
+      <br/><br/>
+      <textarea id="text2" rows="10" cols="120" readonly>Consumer 2 Logs</textarea>
+    </fieldset>
+  </div>
+  <script>
+    var filters;
+    var connection;
+    var producer = null;
+    var consumer1 = null;
+    var consumer2 = null;
+    var timer = null;
+    var counter = 0;
+
+    function start() {
+      let main = document.getElementById('main').style;
+      let front = document.getElementById('frontpage').style;
+
+      front.visibility = "hidden";
+      front.display = "none";
+      main.visibility = "visible";
+      main.display = "block";
+
+      let client = require('rhea');
+      filters = client.filter;
+      let ws = client.websocket_connect(WebSocket);
+      connection = client.connect({"connection_details":ws(document.getElementById('server').value), "reconnect":true});
+      connection.on("connection_open", function (context) {
+        createNewProducer();
+        createNewConsumer('1');
+        createNewConsumer('2');
+      })
+    }
+
+    function toggleProducer() {
+      let button = document.getElementById('pause');
+
+      if (producer == null) {
+        createNewProducer();
+        button.innerText = "Pause";
+      } else {
+        stopLoop();
+        if (producer != null) {
+          producer.close();
+          producer = null;
+        }
+        button.innerText = "Resume";
+      }
+    }
+
+    function startLoop() {
+      stopLoop();
+      timer = setInterval(sendMessage, 1000);
+    }
+
+    function stopLoop() {
+      if (timer == null) return;
+      window.clearInterval(timer);
+      timer = null;
+    }
+
+    function createNewProducer() {
+      // create producer with filter here
+      producer = connection.open_sender({
+        target: {
+          address: document.getElementById('address').value,
+        },
+        autosettle: false,
+      });
+      producer.on("sendable", function (context) {
+        startLoop();
+      });
+    }
+
+    function sendMessage() {
+      if (producer == null) return;
+
+      let header = {};
+      let val = document.getElementById('header').value;
+      if (val.length > 0) {
+        header = {color: val};
+      }
+
+      producer.send({
+        "body": "message " + counter++,
+        "application_properties": header,
+      });
+    }
+
+    function createNewConsumer(id) {
+      if (id === '1') {
+        if (consumer1 != null) {
+          consumer1.on("receiver_close", function (context) {
+            consumer1 = null;
+            createNewConsumer(id);
+          });
+          consumer1.close();
+          return;
+        }
+
+        let filter = null;
+        let val = document.getElementById('filter1').value;
+        if (val.length > 0) {
+          filter = filters.selector(val);
+        }
+
+        // previous consumer1 has been closed
+        consumer1 = connection.open_receiver({
+          source: {
+            address: document.getElementById('address').value,
+            filter: filter,
+          }
+        });
+        consumer1.on("message", function (context) {
+          log('1', JSON.stringify(context.message));
+        });
+      } else {
+        if (consumer2 != null) {
+          consumer2.on("receiver_close", function (context) {
+            consumer2 = null;
+            createNewConsumer(id);
+          });
+          consumer2.close();
+          return;
+        }
+
+        let filter = null;
+        let val = document.getElementById('filter2').value;
+        if (val.length > 0) {
+          filter = filters.selector(val);
+        }
+
+        // previous consumer2 has been closed
+        consumer2 = connection.open_receiver({
+          source: {
+            address: document.getElementById('address').value,
+            filter: filter,
+          }
+        });
+        consumer2.on("message", function (context) {
+          log('2', JSON.stringify(context.message));
+        });
+      }
+    }
+
+    function changeFilter(id) {
+      createNewConsumer(id);
+    }
+
+    function log(id, message) {
+      let now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth() + 1;
+      let date = now.getDate();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      let seconds = now.getSeconds();
+      let milliseconds = now.getMilliseconds();
+
+      year = year + "";
+      month = month + "";
+      date = date + "";
+      hours = hours + "";
+      minutes = minutes + "";
+      seconds = seconds + "";
+      milliseconds = milliseconds + "";
+
+      let line = "[" + year.padStart(4, "0") + "-" + month.padStart(2, "0") + "-" + date.padStart(2, "0") + " " + hours.padStart(2, "0") + ":" + minutes.padStart(2, "0") + ":" + seconds.padStart(2, "0") + "." + milliseconds.padStart(3, "0") + "] " + message;
+
+      let area = document.getElementById((id === '1'?"text1":"text2"));
+      area.value += "\n" + line;
+      area.scrollTop = area.scrollHeight;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+#main {
+    visibility: hidden;
+}
+
+.grid-container {
+    display: grid;
+    row-gap: 1vh;
+    column-gap: 2vw;
+    grid-template-columns: 40fr 60fr;
+}
+
+.label {
+    text-align: right;
+    padding: 10px;
+}
+
+.input {
+    padding: 10px;
+}
+
+input {
+    width: 100%;
+}
+
+.buttons {
+    padding: 10px;
+    grid-column: span 2;
+    text-align: center;
+}
+
+fieldset {
+    margin: 16px;
+    padding: 16px;
+}
+
+.message {
+    color: black;
+}
+
+.log {
+    color: gray;
+}
