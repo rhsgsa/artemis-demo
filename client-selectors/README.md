@@ -14,7 +14,7 @@ To run the demo,
 
 		make start
 
-1. A browser should not open to the AMQP browser client - click the Start button and experiment with different settings for the producer and consumers
+1. A browser should now open to the AMQP browser client - click the Start button and experiment with different settings for the producer and consumers
 
 After you're done, you can terminate the containers with Ctrl-C and by running
 

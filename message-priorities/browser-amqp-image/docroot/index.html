@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Browser AMQP Client</title>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- https://github.com/amqp/rhea/blob/main/examples/websockets/client.html -->
+  <!-- This example was adapted from a chat example included in the
+  excellent 'JavaScript: The Definitive Guide', by David Flanagan and
+  published by O'Reilly. -->
+<script src="rhea.js"></script>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+</head>
+<body>
+  <div id="frontpage">
+    <div class="grid-container">
+      <div class="label">Server</div>
+      <div class="input">
+        <input type="text" id="server" value="ws://localhost:5672">
+      </div>
+      <div class="label">Address</div>
+      <div class="input">
+        <input type="text" id="address" value="demo">
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="start()">Start</button>
+    </div>
+  </div>
+  <div id="main">
+    <fieldset>
+      <legend>Producer</legend>
+      <label>Priority</label>
+      <select id="priority">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+      </select>
+      <br/><br/>
+      <label>Body</label>
+      <label id="body" class="messagebody">message 0</label>
+      <br/><br/>
+      <button id="send" onclick="send()">Send Message</button>
+    </fieldset>
+    <fieldset>
+      <legend>Consumer</legend>
+      <button id="toggleConsumer" onclick="toggleConsumer()">Start Consumer</button>
+      <br/><br/>
+      <textarea id="text" rows="10" cols="120" readonly>Consumer Logs</textarea>
+    </fieldset>
+  </div>
+  <script>
+    var connection;
+    var producer = null;
+    var consumer = null;
+    var counter = 0;
+
+    function start() {
+      let main = document.getElementById('main').style;
+      let front = document.getElementById('frontpage').style;
+
+      front.visibility = "hidden";
+      front.display = "none";
+      main.visibility = "visible";
+      main.display = "block";
+
+      let client = require('rhea');
+      let ws = client.websocket_connect(WebSocket);
+      connection = client.connect({"connection_details":ws(document.getElementById('server').value), "reconnect":true});
+      connection.on("connection_open", function (context) {
+        createNewProducer();
+      })
+    }
+
+    function send() {
+      if (producer == null) {
+        createNewProducer();
+        button.innerText = "Pause";
+      } else {
+        stopLoop();
+        if (producer != null) {
+          producer.close();
+          producer = null;
+        }
+        button.innerText = "Resume";
+      }
+    }
+
+    function createNewProducer() {
+      // create producer with filter here
+      producer = connection.open_sender({
+        target: {
+          address: document.getElementById('address').value,
+        },
+        autosettle: false,
+      });
+    }
+
+    function send() {
+      if (producer == null) return;
+
+      let header = {};
+
+      producer.send({
+        "body": document.getElementById('body').innerText,
+        "priority": document.getElementById('priority').value,
+      });
+
+      counter++;
+      document.getElementById('body').innerText = "message " + counter;
+    }
+
+    function toggleConsumer() {
+      if (consumer == null) {
+        // create consumer here
+        consumer = connection.open_receiver({
+          source: {
+            address: document.getElementById('address').value,
+          }
+        });
+        consumer.on("message", function (context) {
+          log(JSON.stringify(context.message));
+        });
+
+        document.getElementById('toggleConsumer').innerText = "Stop Consumer";
+      } else {
+        // stop consumer here
+        consumer.on("receiver_close", function (context) {
+          consumer = null;
+        });
+        consumer.close();
+
+        document.getElementById('toggleConsumer').innerText = "Start Consumer";
+      }
+    }
+
+    function log(message) {
+      let now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth() + 1;
+      let date = now.getDate();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      let seconds = now.getSeconds();
+      let milliseconds = now.getMilliseconds();
+
+      year = year + "";
+      month = month + "";
+      date = date + "";
+      hours = hours + "";
+      minutes = minutes + "";
+      seconds = seconds + "";
+      milliseconds = milliseconds + "";
+
+      let line = "[" + year.padStart(4, "0") + "-" + month.padStart(2, "0") + "-" + date.padStart(2, "0") + " " + hours.padStart(2, "0") + ":" + minutes.padStart(2, "0") + ":" + seconds.padStart(2, "0") + "." + milliseconds.padStart(3, "0") + "] " + message;
+
+      let area = document.getElementById(("text"));
+      area.value += "\n" + line;
+      area.scrollTop = area.scrollHeight;
+    }
+  </script>
+</body>
+</html>
